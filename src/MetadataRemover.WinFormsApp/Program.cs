@@ -4,6 +4,9 @@ using MetadataRemover.WinFormsApp.Services;
 using Serilog;
 using Serilog.Core;
 using Splat;
+using System;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace MetadataRemover.WinFormsApp
 {
@@ -35,8 +38,9 @@ namespace MetadataRemover.WinFormsApp
                 Application.ThreadException += Application_ThreadException;
                 // To customize application configuration such as set high DPI settings or default font,
                 // see https://aka.ms/applicationconfiguration.
-                ApplicationConfiguration.Initialize();
-                Application.Run(new MainForm());
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(Program.MainForm);
             }
             finally { mutex.ReleaseMutex(); } // I find this more explicit
         }

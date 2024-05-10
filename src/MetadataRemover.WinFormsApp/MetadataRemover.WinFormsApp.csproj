@@ -2,14 +2,20 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
 
 	  <Product>Metadata Remover</Product>
   </PropertyGroup>
 
+	<ItemGroup>
+		<Compile Update="**\*Form.cs">
+			<SubType>Form</SubType>
+		</Compile>
+	</ItemGroup>
+	
   <ItemGroup>
     <None Include="..\..\libs\exiftool.exe" Link="exiftool.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
