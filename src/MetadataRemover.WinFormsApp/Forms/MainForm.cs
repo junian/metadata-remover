@@ -56,7 +56,7 @@ namespace MetadataRemover.WinFormsApp.Forms
                 this.BindCommand(ViewModel, vm => vm.OpenFileCommand, view => view.button2);
 
                 this.BindCommand(ViewModel, vm => vm.ReadMetadataCommand, view => view.buttonReadMetadata);
-                //this.BindCommand(ViewModel, vm => vm.RemoveMetadataCommand, view => view.buttonRemoveMetadata);
+                this.BindCommand(ViewModel, vm => vm.RemoveMetadataCommand, view => view.buttonRemoveMetadata);
 
                 this.Bind(ViewModel, vm => vm.MetadataList, view => view.textBoxMetadata.Text);
                 this.FormClosing += async (_, e) =>

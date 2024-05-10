@@ -6,6 +6,8 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+
+	  <Product>Metadata Remover</Product>
   </PropertyGroup>
 
   <ItemGroup>

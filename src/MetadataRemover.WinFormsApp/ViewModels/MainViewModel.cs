@@ -37,6 +37,7 @@ namespace MetadataRemover.WinFormsApp.ViewModels
             SelectFileCommand = ReactiveCommand.CreateFromTask(SelectFileAsync);
             OpenFileCommand = ReactiveCommand.CreateFromTask(() => OpenFileAsync(SelectedFile));
             ReadMetadataCommand = ReactiveCommand.CreateFromTask(ReadMetadataAsync);
+            RemoveMetadataCommand = ReactiveCommand.CreateFromTask(RemoveMetadataAsync);
         }
 
         private string _appTitle;
@@ -105,5 +106,13 @@ namespace MetadataRemover.WinFormsApp.ViewModels
         }
 
         public ICommand RemoveMetadataCommand { get; private set; }
+        public async Task RemoveMetadataAsync()
+        {
+            using (var exif = new ExifTool())
+            {
+                exif.RemoveAllProperties(SelectedFile);
+            }
+            await Task.CompletedTask; 
+        }
     }
 }

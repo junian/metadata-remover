@@ -79,6 +79,24 @@ namespace MetadataRemover.WinFormsApp.Services
             }
         }
 
+        public void RemoveAllProperties(string filename)
+        {
+            Debug.WriteLine($"\n-all=\n{filename}\n-execute\n");
+            m_in.Write($"\n-all=\n{filename}\n-execute\n");
+            
+            m_in.Flush();
+#if EXIF_TRACE
+            Debug.WriteLine(filename);
+            Debug.WriteLine("-execute");
+#endif
+            //for (; ; )
+            {
+                var line = m_out.ReadLine();
+                Debug.WriteLine(line);
+
+            }
+        }
+
         #region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
