@@ -8,34 +8,37 @@ using System.Threading.Tasks;
 
 namespace MetadataRemover.WinFormsApp.Services
 {
-    class ExifTool : IDisposable
+    public class ExifTool : IDisposable
     {
-        const string c_exeName = "exiftool.exe";
-        const string c_arguments = @"-stay_open 1 -@ - -common_args -charset UTF8 -G1 -args";
-        const string c_exitCommand = "-stay_open\n0\n-execute\n";
-        const int c_timeout = 30000;    // in milliseconds
-        const int c_exitTimeout = 15000;
+        private const string ExifToolBin = "exiftool.exe";
+        private const string Arguments = @"-stay_open 1 -@ - -common_args -charset UTF8 -G1 -args";
+        private readonly string ExitCommand
+            = string.Join(Environment.NewLine, new string[] { "-stay_open", "0", $"-execute{Environment.NewLine}" });
+        private const int Timeout = 30000;    // in milliseconds
+        private const int ExitTimeout = 15000;
 
-        static Encoding s_Utf8NoBOM = new UTF8Encoding(false);
+        private readonly Encoding Utf8NoBOM = new UTF8Encoding(false);
 
-        Process m_exifTool;
-        StreamWriter m_in;
-        StreamReader m_out;
+        private Process _processExifTool;
+        private StreamWriter _writer;
+        private StreamReader _reader;
 
         public ExifTool()
         {
             // Prepare process start
-            var psi = new ProcessStartInfo(c_exeName, c_arguments);
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-            psi.RedirectStandardInput = true;
-            psi.RedirectStandardOutput = true;
-            psi.StandardOutputEncoding = s_Utf8NoBOM;
+            var psi = new ProcessStartInfo(ExifToolBin, Arguments)
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                StandardOutputEncoding = Utf8NoBOM
+            };
 
             try
             {
-                m_exifTool = Process.Start(psi);
-                if (m_exifTool == null || m_exifTool.HasExited)
+                _processExifTool = Process.Start(psi);
+                if (_processExifTool == null || _processExifTool.HasExited)
                 {
                     throw new ApplicationException("Failed to launch ExifTool!");
                 }
@@ -47,25 +50,26 @@ namespace MetadataRemover.WinFormsApp.Services
 
             // ProcessStartInfo in .NET Framework doesn't have a StandardInputEncoding property (though it does in .NET Core)
             // So, we have to wrap it this way.
-            m_in = new StreamWriter(m_exifTool.StandardInput.BaseStream, s_Utf8NoBOM);
-            m_out = m_exifTool.StandardOutput;
+            _writer = new StreamWriter(_processExifTool.StandardInput.BaseStream, Utf8NoBOM);
+            _reader = _processExifTool.StandardOutput;
         }
 
-        public void GetProperties(string filename, ICollection<KeyValuePair<string, string>> propsRead)
+        public Task<IList<KeyValuePair<string, string>>> GetPropertiesAsync(string filename)
         {
-            m_in.Write(filename);
-            m_in.Write("\n-execute\n");
-            m_in.Flush();
-#if EXIF_TRACE
-            Debug.WriteLine(filename);
-            Debug.WriteLine("-execute");
-#endif
+            return Task.FromResult(GetProperties(filename));
+        }
+        public IList<KeyValuePair<string, string>> GetProperties(string filename)
+        {
+            var commands = new string[] { filename, $"-execute{Environment.NewLine}" };
+            _writer.Write(string.Join(Environment.NewLine, commands));
+            _writer.Flush();
+
+            var result = new List<KeyValuePair<string, string>>();
+
             for (; ; )
             {
-                var line = m_out.ReadLine();
-#if EXIF_TRACE
-                Debug.WriteLine(line);
-#endif
+                var line = _reader.ReadLine();
+
                 if (line.StartsWith("{ready")) break;
                 if (line[0] == '-')
                 {
@@ -74,35 +78,34 @@ namespace MetadataRemover.WinFormsApp.Services
                     {
                         string key = line.Substring(1, eq - 1);
                         string value = line.Substring(eq + 1).Trim();
-                        propsRead.Add(new KeyValuePair<string, string>(key, value));
+                        result.Add(new KeyValuePair<string, string>(key, value));
                     }
                 }
             }
+
+            return result;
         }
 
-        public void RemoveAllProperties(string filename)
+        public Task<int> RemoveAllPropertiesAsync(string filename)
         {
-            Debug.WriteLine($"\n-all=\n{filename}\n-execute\n");
-            m_in.Write($"\n-all=\n{filename}\n-execute\n");
-            
-            m_in.Flush();
-#if EXIF_TRACE
-            Debug.WriteLine(filename);
-            Debug.WriteLine("-execute");
-#endif
-            //for (; ; )
-            {
-                var line = m_out.ReadLine();
-                Debug.WriteLine(line);
+            return Task.FromResult(RemoveAllProperties(filename));
+        }
 
-            }
+        public int RemoveAllProperties(string filename)
+        {
+            var commands = new string[] { "-all=", filename, $"-execute{Environment.NewLine}" };
+            _writer.Write(string.Join(Environment.NewLine, commands));
+            _writer.Flush();
+            var line = _reader.ReadLine();
+            Debug.WriteLine(line);
+            return 0;
         }
 
         #region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
         {
-            if (m_exifTool != null)
+            if (_processExifTool != null)
             {
                 if (!disposing)
                 {
@@ -110,14 +113,14 @@ namespace MetadataRemover.WinFormsApp.Services
                 }
 
                 // If process is running, shut it down cleanly
-                if (!m_exifTool.HasExited)
+                if (!_processExifTool.HasExited)
                 {
-                    m_in.Write(c_exitCommand);
-                    m_in.Flush();
+                    _writer.Write(ExitCommand);
+                    _writer.Flush();
 
-                    if (!m_exifTool.WaitForExit(c_exitTimeout))
+                    if (!_processExifTool.WaitForExit(ExitTimeout))
                     {
-                        m_exifTool.Kill();
+                        _processExifTool.Kill();
                         Debug.Fail("Timed out waiting for exiftool to exit.");
                     }
 #if EXIF_TRACE
@@ -128,18 +131,18 @@ namespace MetadataRemover.WinFormsApp.Services
 #endif
                 }
 
-                if (m_out != null)
+                if (_reader != null)
                 {
-                    m_out.Dispose();
-                    m_out = null;
+                    _reader.Dispose();
+                    _reader = null;
                 }
-                if (m_in != null)
+                if (_writer != null)
                 {
-                    m_in.Dispose();
-                    m_in = null;
+                    _writer.Dispose();
+                    _writer = null;
                 }
-                m_exifTool.Dispose();
-                m_exifTool = null;
+                _processExifTool.Dispose();
+                _processExifTool = null;
             }
         }
 

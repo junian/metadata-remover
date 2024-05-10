@@ -92,15 +92,16 @@ namespace MetadataRemover.WinFormsApp.ViewModels
         private async Task ReadMetadataAsync()
         {
             var result = new StringBuilder();
-            var dict = new Dictionary<string, string>();
+            //var dict = new List<KeyValuePair<string, string>>();
             using(var exif = new ExifTool())
             {
-                exif.GetProperties(SelectedFile, dict);
+                var dict = await exif.GetPropertiesAsync(SelectedFile);
+                foreach (var kv in dict)
+                {
+                    result.AppendLine($"{kv.Key}: {kv.Value}");
+                }
             }
-            foreach(var kv in dict)
-            {
-                result.AppendLine($"{kv.Key}: {kv.Value}");
-            }
+            
             MetadataList = result.ToString();
             await Task.CompletedTask;
         }
@@ -110,7 +111,7 @@ namespace MetadataRemover.WinFormsApp.ViewModels
         {
             using (var exif = new ExifTool())
             {
-                exif.RemoveAllProperties(SelectedFile);
+                await exif.RemoveAllPropertiesAsync(SelectedFile);
             }
             await Task.CompletedTask; 
         }
