@@ -22,5 +22,17 @@ namespace MetadataRemover.WinFormsApp.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SelectedFile {
+            get {
+                return ((string)(this["SelectedFile"]));
+            }
+            set {
+                this["SelectedFile"] = value;
+            }
+        }
     }
 }

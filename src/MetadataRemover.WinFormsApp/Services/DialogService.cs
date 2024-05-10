@@ -90,6 +90,28 @@ namespace MetadataRemover.WinFormsApp.Services
                 icon: MessageBoxIcon.None);
         }
 
+        public Task<string> ShowFileBrowserAsync(string filename = "")
+        {
+            return Task.FromResult(ShowFileBrowser(filename));
+        }
+        public string ShowFileBrowser(string filename = "")
+        {
+            using (var fbd = new OpenFileDialog())
+            {
+                if(!string.IsNullOrWhiteSpace(filename))
+                    fbd.FileName = filename;
+
+                var result = fbd.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.FileName))
+                {
+                    return fbd.FileName;
+                }
+            }
+
+            return null;
+        }
+
         public Task<string> ShowFolderBrowserAsync()
         {
             return Task.FromResult(ShowFolderBrowser());
