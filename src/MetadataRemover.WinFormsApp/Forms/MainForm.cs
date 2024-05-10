@@ -59,8 +59,10 @@ namespace MetadataRemover.WinFormsApp.Forms
                     //}
                     //else if (result == null)
                     //{
-                        e.Cancel = true;
+                        e.Cancel = false;
                     //}
+
+                    await Task.CompletedTask;
                 };
 
             });

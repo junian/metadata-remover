@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\libs\exiftool.exe" Link="exiftool.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MvvmReady" Version="1.2.0" />
     <PackageReference Include="ReactiveUI" Version="20.0.1" />
     <PackageReference Include="ReactiveUI.WinForms" Version="20.0.1" />
