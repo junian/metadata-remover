@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace MetadataRemover.WinFormsApp.ViewModels
 {
-    internal class ViewModelBase : ReactiveObject
+    public class ViewModelBase : ReactiveObject
     {
+
     }
 }
